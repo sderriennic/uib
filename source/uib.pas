@@ -1386,21 +1386,31 @@ end;
 procedure TUIBDataBase.CreateDatabase(DefaultCharacterSet: TCharacterSet; PageSize: Integer);
 var TrHandle: IscTrHandle;
 const
-  CreateDb = 'CREATE DATABASE ''%s'' USER ''%s'' PASSWORD ''%s'' ' +
+  CreateDb = 'CREATE DATABASE ''%s'' USER ''%s'' %s' +
     'SET NAMES ''%s'' PAGE_SIZE %d DEFAULT CHARACTER SET %s';
+
+  function PasswordParam: string;
+  begin
+    if PassWord <> '' then
+      Result := Format('PASSWORD ''%s'' ', [Password])
+    else
+      Result := '';
+  end;
+
+
 begin
   TrHandle := nil;
   Connected := False;
   FLibrary.Load(FLiBraryName);
 {$IFDEF UNICODE}
   FLibrary.DSQLExecuteImmediate(FDbHandle, TrHandle,
-    AnsiString(Format(CreateDb, [DatabaseName, UserName, PassWord,
+    AnsiString(Format(CreateDb, [DatabaseName, UserName, PasswordParam,
                      CharacterSetStr[CharacterSet],
                      PageSize, CharacterSetStr[DefaultCharacterSet]])),
     SQLDialect);
 {$ELSE}
   FLibrary.DSQLExecuteImmediate(FDbHandle, TrHandle,
-    Format(CreateDb, [DatabaseName, UserName, PassWord,
+    Format(CreateDb, [DatabaseName, UserName, PasswordParam,
            CharacterSetStr[CharacterSet],
            PageSize, CharacterSetStr[DefaultCharacterSet]]),
     SQLDialect);
