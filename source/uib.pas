@@ -947,15 +947,19 @@ type
 
   TUIBService = class(TUIBComponent)
   private
-    FLiBraryName: string;
+    FLibraryName: string;
     FUserName: string;
     FPassWord: string;
-    FHost    : string;
+    FHost: string;
+  {$IFDEF FB30_UP}
+    FExpectedDb: string;
+    FRoleName: string;
+  {$ENDIF}
     FProtocol: TUIBProtocol;
     procedure SetLibraryName(const Lib: String);
   protected
     FLibrary: TUIBLibrary;
-    FHandle  : IscSvcHandle;
+    FHandle: IscSvcHandle;
     procedure BeginService; virtual;
     procedure EndService; virtual;
     function CreateParam(code: AnsiChar; const Value: RawByteString): RawByteString; overload;
@@ -967,6 +971,10 @@ type
   published
     property UserName: string read FUserName write FUserName;
     property PassWord: string read FPassWord write FPassWord;
+  {$IFDEF FB30_UP}
+    property ExpectedDb: string read FExpectedDb write FExpectedDb;
+    property RoleName: string read FRoleName write FRoleName;
+  {$ENDIF}
     property Host: string read FHost write FHost;
     property Protocol: TUIBProtocol read FProtocol write FProtocol default proLocalHost;
     { Define wich library the connection use.}
@@ -3535,10 +3543,17 @@ var
     if (Value <> '') then
       SPB := SPB + id + AnsiChar(length(Value)) + Value;
   end;
+
 begin
   SPB := isc_spb_version + isc_spb_current_version;
   AddString(isc_spb_user_name, AnsiString(FUserName));
   AddString(isc_spb_password, AnsiString(FPassWord));
+{$IFDEF FB30_UP}
+  if FExpectedDb <> '' then
+    AddString(isc_spb_expected_db, AnsiString(FExpectedDb));
+  if FRoleName <> '' then
+    AddString(isc_spb_sql_role_name, AnsiString(FRoleName));
+{$ENDIF}
   FLibrary.Load(FLiBraryName);
   case FProtocol of
     proLocalHost : FLibrary.ServiceAttach('service_mgr', FHandle, SPB);
