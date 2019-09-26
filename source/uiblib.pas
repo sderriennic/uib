@@ -1760,6 +1760,7 @@ const
   function CreateTRParams(Options: TTransParams; const LockRead, LockWrite: string{$IFDEF FB20_UP}; LockTimeout: Word{$ENDIF}): RawByteString;
   var
     tp: TTransParam;
+
     procedure ParseStrOption(const code: AnsiChar; const Value: AnsiString);
     var
       P, Start: PAnsiChar;
@@ -1770,15 +1771,18 @@ const
         while (P^ <> #0) do
         begin
           Start := P;
-          while not (P^ in [#0, ';']) do Inc(P);
+          while not (P^ in [#0, ';']) do
+            Inc(P);
           if (P - Start) > 0 then
           begin
             SetString(S, Start, P - Start);
             Result := Result + code + AnsiChar(P - Start) + S;
           end;
-          if P^ =';' then inc(P);
+          if P^ =';' then
+            Inc(P);
         end;
     end;
+
   const
     tpc: array[TTransParam] of AnsiChar = (
       isc_tpb_consistency,
@@ -1818,10 +1822,10 @@ const
           if (tp in Options) then
           begin
             case tp of
-              tpLockRead    : ParseStrOption(tpc[tp], AnsiString(LockRead));
-              tpLockWrite   : ParseStrOption(tpc[tp], AnsiString(LockWrite));
+              tpLockRead:    ParseStrOption(tpc[tp], AnsiString(LockRead));
+              tpLockWrite:   ParseStrOption(tpc[tp], AnsiString(LockWrite));
             {$IFDEF FB20_UP}
-              tpLockTimeout : Result := Result + tpc[tp] + PAnsiChar(@LockTimeout)[0] + PAnsiChar(LockTimeout)[1];
+              tpLockTimeout: Result := Result + tpc[tp] + #2 + PAnsiChar(@LockTimeout)[0] + PAnsiChar(@LockTimeout)[1]
             {$ENDIF}
             else
               Result := Result + tpc[tp];
