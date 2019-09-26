@@ -900,7 +900,7 @@ type
   end;
 
   { Parsing event, occur on each query executed. }
-  TOnParse = procedure(Sender: TObject; NodeType: TSQLStatement;
+  TOnParse = procedure(Sender: TObject; var NodeType: TSQLStatement;
     const Statement: string) of object;
 
   { Executing error event, occur if executed query is failed. }
@@ -4084,8 +4084,18 @@ begin
       st := Parser.NextStatement;
       if st = ssEOF then
         Break;
+
       if Assigned(FOnParse) then
         FOnParse(self, st, Parser.Statement);
+
+      { Early exit }
+      if st = ssEOF then
+        Break;
+
+      { Skip current statement }
+      if st = ssSkip then
+        Continue;
+
       case st of
         ssSetSqlDialect:
           begin
@@ -4204,7 +4214,8 @@ begin
         TryExecute;
         //if not FBulk then
           if FAutoDDL then
-            FQuery.Close(etmCommit) else
+            FQuery.Close(etmCommit)
+          else
             FQuery.Close(etmStayIn);
       end;
     end;

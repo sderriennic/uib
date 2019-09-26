@@ -81,7 +81,7 @@ type
     ssCommentView, ssCommentProcedure, ssCommentTrigger, ssCommentFunction,
     ssCommentFilter, ssCommentException, ssCommentGenerator, ssCommentSequence,
     ssCommentIndex, ssCommentRole, ssCommentCharacterSet, ssCommentCollation,
-    ssCommentColumn, ssCommentParameter, ssBulkParams, ssEOF);
+    ssCommentColumn, ssCommentParameter, ssBulkParams, ssEOF, ssSkip);
 
 type
   EUIBSQLParseError = class(Exception)
