@@ -1544,30 +1544,32 @@ const
     end;
   begin
     if (Status <> 0) and FRaiseErrors then
-	if (GetClass(Status) = CLASS_ERROR) then // only raise CLASS_ERROR
-    begin
-      case GetFacility(Status) of
-        FAC_JRD     :
-          if Status = isc_except then
-        begin
-          Number := FStatusVector[3];
-          if assigned(FOnGetDBExceptionClass) then
-            FOnGetDBExceptionClass(Number, Excep) else
-            Excep := EUIBException;
-        end else
+      if (GetClass(Status) = CLASS_ERROR) then // only raise CLASS_ERROR
+      begin
+        case GetFacility(Status) of
+          FAC_JRD     :
+            if Status = isc_except then
+            begin
+              Number := FStatusVector[3];
+              if assigned(FOnGetDBExceptionClass) then
+                FOnGetDBExceptionClass(Number, Excep) 
+              else
+                Excep := EUIBException;
+            end 
+            else
+              Excep := EUIBError;
+          FAC_GFIX    : Excep := EUIBGFIXError;
+          FAC_DSQL    : Excep := EUIBDSQLError;
+          FAC_DYN     : Excep := EUIBDYNError;
+          FAC_GBAK    : Excep := EUIBGBAKError;
+          FAC_GSEC    : Excep := EUIBGSECError;
+          FAC_LICENSE : Excep := EUIBLICENSEError;
+          FAC_GSTAT   : Excep := EUIBGSTATError;
+        else
           Excep := EUIBError;
-        FAC_GFIX    : Excep := EUIBGFIXError;
-        FAC_DSQL    : Excep := EUIBDSQLError;
-        FAC_DYN     : Excep := EUIBDYNError;
-        FAC_GBAK    : Excep := EUIBGBAKError;
-        FAC_GSEC    : Excep := EUIBGSECError;
-        FAC_LICENSE : Excep := EUIBLICENSEError;
-        FAC_GSTAT   : Excep := EUIBGSTATError;
-      else
-        Excep := EUIBError;
+        end;
+        RaiseException(Excep)
       end;
-      RaiseException(Excep)
-    end;
   end;
 
 //******************************************************************************
