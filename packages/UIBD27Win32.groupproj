@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{ED78596A-3724-4B37-9DAD-2148095B44A8}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="UIBD27Win32R.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="UIBD27Win32D.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="UIBD27Win32R">
+        <MSBuild Projects="UIBD27Win32R.dproj"/>
+    </Target>
+    <Target Name="UIBD27Win32R:Clean">
+        <MSBuild Projects="UIBD27Win32R.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="UIBD27Win32R:Make">
+        <MSBuild Projects="UIBD27Win32R.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="UIBD27Win32D">
+        <MSBuild Projects="UIBD27Win32D.dproj"/>
+    </Target>
+    <Target Name="UIBD27Win32D:Clean">
+        <MSBuild Projects="UIBD27Win32D.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="UIBD27Win32D:Make">
+        <MSBuild Projects="UIBD27Win32D.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="UIBD27Win32R;UIBD27Win32D"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="UIBD27Win32R:Clean;UIBD27Win32D:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="UIBD27Win32R:Make;UIBD27Win32D:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>
