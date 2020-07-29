@@ -128,7 +128,10 @@ begin
   RegisterPropertyEditor(TypeInfo(TStrings), TUIBStatement, 'SQL', TUIBStatementSQLProperty);
 {$ENDIF HAVE_SYNEDIT}
   RegisterComponents('UIB', [TUIBDatabase, TUIBTransaction, TUIBQuery,
-    TUIBScript, TUIBBackup, TUIBRestore, TUIBSecurity, TUIBRepair,
+    TUIBScript, TUIBBackup, TUIBRestore,
+    {$IFDEF FB25_UP}TUIBNBackup, TUIBNRestore,{$ENDIF}
+    TUIBSecurity,
+    TUIBRepair, {$IFDEF FB30_UP}TUIBValidate,{$ENDIF}
     TUIBEvents, TUIBConfig, TUIBServerInfo, TUIBStats]);
 {$IFNDEF UIBPEVERSION}
   RegisterComponents('UIB', [TUIBDataSet]);

@@ -983,23 +983,30 @@ type
 
   TVerboseEvent = procedure(Sender: TObject; Message: string) of object;
 
-  TUIBBackupRestore = class(TUIBService)
+  TUIBVerboseService = class(TUIBService)
   private
-    FBackupFiles: TStrings;
     FDatabase: TFileName;
     FOnVerbose: TVerboseEvent;
     FVerbose: boolean;
-    procedure SetBackupFiles(const Value: TStrings);
     function CreateStartSPB: RawByteString; virtual; abstract;
   public
     constructor Create{$IFNDEF UIB_NO_COMPONENT}(AOwner: TComponent); override{$ENDIF};
-    destructor Destroy; override;
     procedure Run;
   published
-    property BackupFiles: TStrings read FBackupFiles write SetBackupFiles;
     property Database: TFileName read FDatabase write FDatabase;
     property OnVerbose: TVerboseEvent read FOnVerbose write FOnVerbose;
     property Verbose: boolean read FVerbose write FVerbose default false;
+  end;
+
+  TUIBBackupRestore = class(TUIBVerboseService)
+  private
+    FBackupFiles: TStrings;
+    procedure SetBackupFiles(const Value: TStrings);
+  public
+    constructor Create{$IFNDEF UIB_NO_COMPONENT}(AOwner: TComponent); override{$ENDIF};
+    destructor Destroy; override;
+  published
+    property BackupFiles: TStrings read FBackupFiles write SetBackupFiles;
   end;
 
   TBackupOption = (boIgnoreChecksums, boIgnoreLimbo, boMetadataOnly,
@@ -1041,6 +1048,33 @@ type
     property FixDataCharset: TCharacterSet read FFixDataCharset write FFixDataCharset;
 {$ENDIF}
   end;
+
+{$IFDEF FB25_UP}
+  TUIBNBackupRestore = class(TUIBVerboseService)
+  private
+    FLevel: Integer;
+    FBackupFile: TFileName;
+    FNoTriggers: Boolean;
+    function CreateStartSPB: RawByteString; override;
+    function GetServiceAction: AnsiChar; virtual; abstract;
+  public
+    constructor Create{$IFNDEF UIB_NO_COMPONENT}(AOwner: TComponent); override{$ENDIF};
+  published
+    property Level: Integer read FLevel write FLevel;
+    property BackupFile: TFileName read FBackupFile write FBackupFile;
+    property NoTriggers: Boolean read FNoTriggers write FNoTriggers;
+  end;
+
+  TUIBNBackup = class(TUIBNBackupRestore)
+  private
+    function GetServiceAction: AnsiChar; override;
+  end;
+
+  TUIBNRestore = class(TUIBNBackupRestore)
+  private
+    function GetServiceAction: AnsiChar; override;
+  end;
+{$ENDIF}
 
   TSecurityAction = (saAddUser, saDeleteUser, saModifyUser, saDisplayUser, saDisplayUsers);
   TSecurityParam = (spRole, spUser, spPass, spFirstName, spMiddleName, spLastName, spUserID, spGroupID{$IFDEF FB25_UP}, spAdmin{$ENDIF});
@@ -1120,23 +1154,39 @@ type
     roListLimboTrans, roCheckDB, roIgnoreChecksum, roKillShadows);
   TRepairOptions = set of TRepairOption;
 
-  TUIBRepair = class(TUIBService)
+  TUIBRepair = class(TUIBVerboseService)
   private
     FOptions: TRepairOptions;
-    FDatabase: string;
-    FOnVerbose: TVerboseEvent;
-    FVerbose: boolean;
   protected
-    function CreateStartSPB: RawByteString; virtual;
+    function CreateStartSPB: RawByteString; override;
   public
-    procedure Run;
     constructor Create{$IFNDEF UIB_NO_COMPONENT}(AOwner: TComponent); override{$ENDIF};
   published
     property Options: TRepairOptions read FOptions write FOptions;
-    property Database: string read FDatabase write FDatabase;
-    property OnVerbose: TVerboseEvent read FOnVerbose write FOnVerbose;
-    property Verbose: boolean read FVerbose write FVerbose default false;
   end;
+
+{$IFDEF FB30_UP}
+  TUIBValidate = class(TUIBVerboseService)
+  private
+    const DEFAULT_LOCK_TIMEOUT = 10;
+  private
+    FIncludeTables: string;
+    FExcludeTables: string;
+    FIncludeIndices: string;
+    FExcludeIndices: string;
+    FLockTimeout: Integer;
+  protected
+    function CreateStartSPB: RawByteString; override;
+  public
+    constructor Create{$IFNDEF UIB_NO_COMPONENT}(AOwner: TComponent); override{$ENDIF};
+  published
+    property IncludeTables: string read FIncludeTables write FIncludeTables;
+    property ExcludeTables: string read FExcludeTables write FExcludeTables;
+    property IncludeIndices: string read FIncludeIndices write FIncludeIndices;
+    property ExcludeIndices: string read FExcludeIndices write FExcludeIndices;
+    property LockTimeout: Integer read FLockTimeout write FLockTimeout {$IFNDEF UIB_NO_COMPONENT}default DEFAULT_LOCK_TIMEOUT{$ENDIF};
+  end;
+{$ENDIF}
 
   TOnEvent = procedure(Sender: TObject; const EventName: string; Count: Integer;
     var Cancel: boolean) of object;
@@ -3609,27 +3659,15 @@ begin
   result := code + AnsiChar(Value);
 end;
 
-{ TUIBBackupRestore }
+{ TUIBVerboseService }
 
-constructor TUIBBackupRestore.Create{$IFNDEF UIB_NO_COMPONENT}(AOwner: TComponent){$ENDIF};
+constructor TUIBVerboseService.Create(AOwner: TComponent);
 begin
   inherited;
-  FBackupFiles := TStringList.Create;
-  FVerbose := false;
+  FVerbose := False;
 end;
 
-destructor TUIBBackupRestore.Destroy;
-begin
-  FBackupFiles.Free;
-  inherited;
-end;
-
-procedure TUIBBackupRestore.SetBackupFiles(const Value: TStrings);
-begin
-  FBackupFiles.Assign(Value);
-end;
-
-procedure TUIBBackupRestore.Run;
+procedure TUIBVerboseService.Run;
 var
   Buffer: RawByteString;
   Len: Word;
@@ -3659,6 +3697,25 @@ begin
   end;
 end;
 
+{ TUIBBackupRestore }
+
+constructor TUIBBackupRestore.Create{$IFNDEF UIB_NO_COMPONENT}(AOwner: TComponent){$ENDIF};
+begin
+  inherited;
+  FBackupFiles := TStringList.Create;
+end;
+
+destructor TUIBBackupRestore.Destroy;
+begin
+  FBackupFiles.Free;
+  inherited;
+end;
+
+procedure TUIBBackupRestore.SetBackupFiles(const Value: TStrings);
+begin
+  FBackupFiles.Assign(Value);
+end;
+
 { TUIBBackup }
 
 function TUIBBackup.CreateStartSPB: RawByteString;
@@ -3667,12 +3724,15 @@ var
   i: Integer;
   FileName: AnsiString;
   FileLength: Integer;
+
   function GetValue(Index: Integer): string;
   begin
     if Index >= 0 then
-      Result := Copy(FBackupFiles.Strings[Index], Length(FBackupFiles.Names[Index]) + 2, MaxInt) else
+      Result := Copy(FBackupFiles.Strings[Index], Length(FBackupFiles.Names[Index]) + 2, MaxInt)
+    else
       Result := '';
   end;
+
 begin
   // backup service   ibservices
   Result := isc_action_svc_backup;
@@ -3798,6 +3858,58 @@ begin
   end;
 {$ENDIF}
 end;
+
+{$IFDEF FB25_UP}
+
+{ TUIBNBackupRestore }
+
+constructor TUIBNBackupRestore.Create{$IFNDEF UIB_NO_COMPONENT}(aOwner: TComponent){$ENDIF};
+begin
+  inherited;
+  FLevel := 0;
+  FNoTriggers := False;
+end;
+
+function TUIBnBackupRestore.CreateStartSPB: RawByteString;
+var
+  Len: Word;
+begin
+  // backup service   ibservices
+  Result := GetServiceAction;
+
+  // DB Name
+  Result := Result + isc_spb_dbname;
+  Len := Length(FDatabase);
+  Result := Result + PAnsiChar(@Len)[0] + PAnsiChar(@Len)[1];
+  Result := Result + AnsiString(FDatabase);
+
+  // NBK File
+  Result := Result + AnsiChar(isc_spb_nbk_file);
+  Len := Length(FBackupFile);
+  Result := Result + PAnsiChar(@Len)[0] + PAnsiChar(@Len)[1];
+  Result := Result + AnsiString(FBackupFile);
+
+  // NBK_Level
+  Result := Result + AnsiChar(isc_spb_nbk_level);
+  Result := Result + PAnsiChar(@FLevel)[0] + PAnsiChar(@FLevel)[1] +
+                     PAnsiChar(@FLevel)[2] + PAnsiChar(@FLevel)[3];
+end;
+
+{ TUIBNBackup }
+
+function TUIBNBackup.GetServiceAction: AnsiChar;
+begin
+  Result := isc_action_svc_nbak;
+end;
+
+{ TUIBNRestore }
+
+function TUIBNRestore.GetServiceAction: AnsiChar;
+begin
+  Result := isc_action_svc_nrest;
+end;
+
+{$ENDIF}
 
 { TUIBSecurity }
 
@@ -4296,7 +4408,8 @@ begin
   Result := Result + AnsiString(FDatabase);
 
   if (roSweepDB in FOptions) then
-    Param := isc_spb_rpr_sweep_db else
+    Param := isc_spb_rpr_sweep_db
+  else
     Param := 0;
   if (roValidateDB in FOptions) then
     Param := Param or isc_spb_rpr_validate_db;
@@ -4305,7 +4418,8 @@ begin
     Result := Result + isc_spb_options + AnsiChar(Param) + #0#0#0;
 
   if (roListLimboTrans in FOptions) then
-    Param := isc_spb_rpr_list_limbo_trans else
+    Param := isc_spb_rpr_list_limbo_trans
+  else
     Param := 0;
   if (roCheckDB in FOptions) then
     Param := Param or isc_spb_rpr_check_db;
@@ -4325,35 +4439,58 @@ begin
     Result := Result + isc_spb_options + AnsiChar(Param) + #0#0#0;
 end;
 
-procedure TUIBRepair.Run;
-var
-  Buffer: RawByteString;
-  Len: Word;
+{$IFDEF FB30_UP}
+
+{ TUIBValidate }
+
+constructor TUIBValidate.Create(AOwner: TComponent);
 begin
-  BeginService;
-  try
-    FLibrary.ServiceStart(FHandle, CreateStartSPB);
-    if FVerbose then
-    begin
-      SetLength(Buffer, 1024);
-      while true do
-      begin
-        FLibrary.ServiceQuery(FHandle, '', isc_info_svc_line, Buffer);
-        if (Buffer[1] <> isc_info_svc_line) then
-          raise Exception.Create(EUIB_UNEXPECTEDERROR);
-        Len := PWord(@Buffer[2])^;
-        if (len > 0)  then
-        begin
-          if Assigned(FOnVerbose) then
-            FOnVerbose(self, string(copy(Buffer, 4, len)));
-        end else
-          Break;
-      end;
-    end;
-  finally
-    EndService;
-  end;
+  inherited;
+  FLockTimeout := DEFAULT_LOCK_TIMEOUT;
 end;
+
+function TUIBValidate.CreateStartSPB: RawByteString;
+
+  procedure AppendStringParam(Param: Byte; const Value: string);
+  var
+    Len: Word;
+  begin
+    Result := Result + AnsiChar(Param);
+    Len := Length(Value);
+    Result := Result + PAnsiChar(@Len)[0] + PAnsiChar(@Len)[1];
+    Result := Result + AnsiString(Value);
+  end;
+
+  procedure AppendIntegerParam(Param: Byte; const Value: Integer);
+  begin
+    Result := Result + AnsiChar(Param) + PAnsiChar(@Value)[0] + PAnsiChar(@Value)[1] +
+                                         PAnsiChar(@Value)[2] + PAnsiChar(@Value)[3];
+  end;
+
+begin
+  result := isc_action_svc_validate;
+
+  // DB Name
+  AppendStringParam(Byte(isc_spb_dbname), FDatabase);
+
+  // Tables
+  if FIncludeTables <> '' then
+    AppendStringParam(isc_spb_val_tab_incl, FIncludeTables);
+  if FExcludeTables <> '' then
+    AppendStringParam(isc_spb_val_tab_excl, FExcludeTables);
+
+  // Indices
+  if FIncludeIndices <> '' then
+    AppendStringParam(isc_spb_val_idx_incl, FIncludeIndices);
+  if FExcludeIndices <> '' then
+    AppendStringParam(isc_spb_val_idx_excl, FExcludeIndices);
+
+  // Lock Timemout
+  if FLockTimeout <> DEFAULT_LOCK_TIMEOUT then
+    AppendIntegerParam(isc_spb_val_lock_timeout, FLockTimeout);
+end;
+
+{$ENDIF}
 
 { TUIBEvents }
 
