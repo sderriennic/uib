@@ -4091,8 +4091,10 @@ const
 {$ENDIF FPC}
 
 function TUIBaseLibrary.Load(const lib: string = GDS32DLL): Boolean;
+{$IFDEF MSWINDOWS}
 var
-  CurrentDir, Folder: string;
+  Folder: string;
+{$ENDIF}
 
 {$IFDEF UNIX}
 function GetProcAddress(Lib: Pointer; Name: PAnsiChar): Pointer;
@@ -4108,15 +4110,15 @@ begin
   {$IFDEF MSWINDOWS}
     if FileExists(ExpandFileName(lib)) then
     begin
-      CurrentDir := GetCurrentDir;
+      Folder := ExtractFilePath(ExpandFileName(lib));
       try
-        Folder := ExtractFilePath(ExpandFileName(lib));
-        SetCurrentDir(Folder);
+        SetDllDirectory(PChar(Folder));
         FGDS32Lib := LoadLibrary(PChar(ExtractFileName(lib)));
       finally
-        SetCurrentDir(CurrentDir);
+        SetDllDirectory(nil);
       end;
-    end else
+    end
+    else
       FGDS32Lib := LoadLibrary(PChar(lib));
 
   {$ENDIF MSWINDOWS}
