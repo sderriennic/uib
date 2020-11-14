@@ -922,6 +922,7 @@ type
     FSegmentSize: Word;
     function GetSegmentSize: Word;
     procedure SetSegmentSize(Value: Word);
+    function StatementLength(const Statement: RawbyteString): Word;
   public
     constructor Create; override;
     procedure CheckUIBApiCall(const Status: ISCStatus);
@@ -2040,11 +2041,19 @@ const
   // API CALLS
   //****************************************
 
+  function TUIBLibrary.StatementLength(const Statement: RawbyteString): Word;
+  begin
+    if Length(Statement) > High(Word) then
+      Result := 0 { Let engine determine the length of the statement }
+    else
+      Result := Length(Statement);
+  end;
+
   procedure TUIBLibrary.DSQLExecuteImmediate(var DBHandle: IscDbHandle; var TraHandle: IscTrHandle;
     const Statement: RawbyteString; Dialect: Word; Sqlda: TSQLDA = nil);
   begin
     CheckUIBApiCall(isc_dsql_execute_immediate(@FStatusVector, @DBHandle, @TraHandle,
-      length(Statement), Pointer(Statement), Dialect, GetSQLDAData(Sqlda)));
+      StatementLength(Statement), PAnsiChar(Statement), Dialect, GetSQLDAData(Sqlda)));
   end;
 
   procedure TUIBLibrary.DSQLExecuteImmediate(const Statement: RawbyteString; Dialect: Word; Sqlda: TSQLDA = nil);
@@ -2052,7 +2061,7 @@ const
   begin
     p := nil;
     CheckUIBApiCall(isc_dsql_execute_immediate(@FStatusVector, @p, @p,
-      length(Statement), Pointer(Statement), Dialect, GetSQLDAData(Sqlda)));
+      StatementLength(Statement), PAnsiChar(Statement), Dialect, GetSQLDAData(Sqlda)));
   end;
 
   procedure TUIBLibrary.DSQLAllocateStatement(var DBHandle: IscDbHandle; var StmtHandle: IscStmtHandle);
@@ -2071,8 +2080,8 @@ const
     end;
     InfoIn: byte;
   begin
-	  CheckUIBApiCall(isc_dsql_prepare(@FStatusVector, @TraHandle, @StmtHandle, Length(Statement),
-        PAnsiChar(Statement), Dialect, GetSQLDAData(Sqlda)));
+	  CheckUIBApiCall(isc_dsql_prepare(@FStatusVector, @TraHandle, @StmtHandle,
+      StatementLength(Statement), PAnsiChar(Statement), Dialect, GetSQLDAData(Sqlda)));
       InfoIn := isc_info_sql_stmt_type;
       isc_dsql_sql_info(@FStatusVector, @StmtHandle, 1, @InfoIn, SizeOf(STInfo), @STInfo);
       dec(STInfo.InfoType);
@@ -2309,8 +2318,8 @@ const
   procedure TUIBLibrary.DSQLExecImmed2(var DBHhandle: IscDbHandle; var TraHandle: IscTrHandle;
     const Statement: RawbyteString; dialect: Word; InSqlda, OutSqlda: TSQLDA);
   begin
-    CheckUIBApiCall(isc_dsql_exec_immed2(@FStatusVector, @DBHhandle, @TraHandle, Length(Statement),
-      PAnsiChar(Statement), dialect, GetSQLDAData(InSqlda), GetSQLDAData(OutSqlda)));
+    CheckUIBApiCall(isc_dsql_exec_immed2(@FStatusVector, @DBHhandle, @TraHandle,
+      StatementLength(Statement), PAnsiChar(Statement), dialect, GetSQLDAData(InSqlda), GetSQLDAData(OutSqlda)));
   end;
 
   procedure TUIBLibrary.DSQLInfo(var StmtHandle: IscStmtHandle; const Items: array of byte; var buffer: AnsiString);
