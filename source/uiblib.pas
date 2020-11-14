@@ -141,7 +141,7 @@ type
     { allows concurrent transactions to read and write shared data. }
     tpConcurrency,
     { Concurrent, shared access of a specified table among all transactions. }
-  {$IFNDEF FB_21UP}
+  {$IFNDEF FB21_UP}
     tpShared,
     { Concurrent, restricted access of a specified table. }
     tpProtected,
@@ -1790,7 +1790,7 @@ const
     tpc: array[TTransParam] of AnsiChar = (
       isc_tpb_consistency,
       isc_tpb_concurrency,
-    {$IFNDEF FB_21UP}
+    {$IFNDEF FB21_UP}
       isc_tpb_shared,
       isc_tpb_protected,
       isc_tpb_exclusive,
@@ -1848,8 +1848,6 @@ const
   begin
     CheckUIBApiCall(fb_shutdown_callback(@FStatusVector, callBack, mask, arg));
   end;
-
-
 {$ENDIF}
 
   procedure TUIBLibrary.AttachDatabase(const FileName: RawByteString; var DbHandle: IscDbHandle;
