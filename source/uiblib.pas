@@ -2073,19 +2073,20 @@ const
     Statement: RawbyteString; Dialect: Word; Sqlda: TSQLResult = nil): TUIBStatementType;
   var
     STInfo: packed record
-      InfoCode: byte;
+      InfoCode: Byte;
       InfoLen : Word; // isc_portable_integer convert a SmallInt to Word ??? so just say it is a word
       InfoType: TUIBStatementType;
-      Filler: byte;
+      Filler: Byte;
     end;
-    InfoIn: byte;
+    InfoIn: Byte;
   begin
-	  CheckUIBApiCall(isc_dsql_prepare(@FStatusVector, @TraHandle, @StmtHandle,
+    CheckUIBApiCall(isc_dsql_prepare(@FStatusVector, @TraHandle, @StmtHandle,
       StatementLength(Statement), PAnsiChar(Statement), Dialect, GetSQLDAData(Sqlda)));
-      InfoIn := isc_info_sql_stmt_type;
-      isc_dsql_sql_info(@FStatusVector, @StmtHandle, 1, @InfoIn, SizeOf(STInfo), @STInfo);
-      dec(STInfo.InfoType);
-      Result := STInfo.InfoType;
+
+    InfoIn := isc_info_sql_stmt_type;
+    isc_dsql_sql_info(@FStatusVector, @StmtHandle, 1, @InfoIn, SizeOf(STInfo), @STInfo);
+    Dec(STInfo.InfoType);
+    Result := STInfo.InfoType;
 
     if (Sqlda <> nil) then
     begin
