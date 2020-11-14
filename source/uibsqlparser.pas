@@ -14,74 +14,137 @@
 (********************************************************************************)
 
 unit uibsqlparser;
+
 {$I uib.inc}
+
 interface
-uses classes, sysutils;
+uses
+  SysUtils, Classes;
 
 type
-
-  TSQLToken = (toValString, toSymbol, toValNumber, toValFloat, toNotLSS, toNEQ,
-    toNotGTR, toLEQ, toLSS, toEQL, toGEQ, toGTR, toConcatenate, toScolon,
-    toLParen, toRParen, toComma, toLArray, toRArray, toColon, toPlus, toStar,
-    toDot, toVParam, toSlash, toMinus, toACTION, toACTIVE, toADD, toADMIN,
-    toAFTER, toALL, toALTER, toAND, toANY, toAS, toASC, toAT, toAUTO, toAUTODDL,
-    toAVG, toBACKUP, toBASE_NAME, toBEFORE, toBEGIN, toBETWEEN, toBIGINT,
-    toBLOB, toBREAK, toBY, toCACHE, toCASCADE, toCASE, toCAST, toCHAR,
-    toCHARACTER, toCHECK, toCHECK_POINT_LENGTH, toCOALESCE, toCOLLATE, toCOLUMN,
-    toCOMMIT, toCOMMITTED, toCOMPUTED, toCONDITIONAL, toCONNECT, toCONSTRAINT,
-    toCONTAINING, toCOUNT, toCREATE, toCSTRING, toCURRENT, toCURRENT_CONNECTION,
-    toCURRENT_DATE, toCURRENT_ROLE, toCURRENT_TIME, toCURRENT_TIMESTAMP,
-    toCURRENT_TRANSACTION, toCURRENT_USER, toCURSOR, toDATABASE, toDATE, toDAY,
-    toDEBUG, toDEC, toDECIMAL, toDECLARE, toDEFAULT, toDELETE, toDELETING,
-    toDESC, toDESCRIPTOR, toDIALECT, toDIFFERENCE, toDISTINCT, toDO, toDOMAIN,
-    toDOUBLE, toDROP, toELSE, toEND, toENTRY_POINT, toESCAPE, toEXCEPTION,
-    toEXECUTE, toEXISTS, toEXIT, toEXTERNAL, toEXTRACT, toFILE, toFILTER,
-    toFIRST, toFLOAT, toFOR, toFOREIGN, toFREE_IT, toFROM, toFULL, toFUNCTION,
+  TSQLToken = (
+    // Symbols
+    toValString, toSymbol, toValNumber, toValFloat, toNotLSS, toNEQ, toNotGTR, toLEQ,
+    toLSS, toEQL, toGEQ, toGTR, toConcatenate, toScolon, toLParen, toRParen, toComma,
+    toLArray, toRArray, toColon, toPlus, toStar, toDot, toVParam, toSlash, toMinus,
+    // A
+    toACTION, toACTIVE, toADD, toADMIN, toAFTER, toALL, toALTER, toAND, toANY, toAS,
+    toASC, toAT, toAUTO, toAUTODDL, toAVG,
+    // B
+    toBACKUP, toBASE_NAME, toBEFORE, toBEGIN, toBETWEEN, toBIGINT, toBIT_LENGTH,
+    toBLOB, toBLOCK, toBODY, toBOOLEAN, toBOTH, toBREAK, toBY,
+    // C
+    toCACHE, toCASCADE, toCASE, toCAST, toCHAR, toCHAR_LENGTH, toCHARACTER, toCHARACTER_LENGTH,
+    toCHECK, toCHECK_POINT_LENGTH, toCLOSE, toCOALESCE, toCOLLATE, toCOLLATION,
+    toCOLUMN, toCOMMENT, toCOMMIT, toCOMMITTED, toCOMPUTED, toCONDITIONAL, toCONNECT,
+    toCONSTRAINT, toCONTAINING, toCOUNT, toCREATE, toCROSS, toCSTRING, toCURRENT,
+    toCURRENT_CONNECTION, toCURRENT_DATE, toCURRENT_ROLE, toCURRENT_TIME, toCURRENT_TIMESTAMP,
+    toCURRENT_TRANSACTION, toCURRENT_USER, toCURSOR,
+    // D
+    toDATABASE, toDATE, toDAY, toDEBUG, toDEC, toDECIMAL, toDECLARE, toDEFAULT, toDELETE,
+    toDELETING, toDESC, toDESCRIPTOR, toDIALECT, toDIFFERENCE, toDISTINCT, toDO,
+    toDOMAIN, toDOUBLE, toDROP,
+    // E
+    toELSE, toEND, toENTRY_POINT, toESCAPE, toEXCEPTION, toEXECUTE, toEXISTS, toEXIT,
+    toEXTERNAL, toEXTRACT,
+    // F
+    toFETCH, toFILE, toFILTER, toFIRST, toFLOAT, toFOR, toFOREIGN, toFREE_IT, toFROM,
+    toFULL, toFUNCTION,
+    // G
     toGDSCODE, toGEN_ID, toGENERATOR, toGRANT, toGROUP, toGROUP_COMMIT_WAIT_TIME,
-    toHAVING, toHOUR, toIF, toIN, toINACTIVE, toINDEX, toINNER, toINPUT_TYPE,
-    toINSERT, toINSERTING, toINT, toINTEGER, toINTO, toIS, toISOLATION, toJOIN,
-    toKEY, toLAST, toLEAVE, toLEFT, toLENGTH, toLEVEL, toLIKE, toLOCK,
-    toLOG_BUFFER_SIZE, toLOGFILE, toLONG, toMANUAL, toMAX, toMAXIMUM_SEGMENT,
-    toMERGE, toMESSAGE, toMIN, toMINUTE, toMODULE_NAME, toMONTH, toNAMES,
-    toNATIONAL, toNATURAL, toNCHAR, toNO, toNOT, toNULL, toNULLIF, toNULLS,
-    toNUM_LOG_BUFFERS, toNUMERIC, toOF, toOFF, toON, toONLY, toOPTION, toOR, toORDER,
-    toOUTER, toOUTPUT_TYPE, toOVERFLOW, toPAGE, toPAGE_SIZE, toPAGES,
-    toPARAMETER, toPASSWORD, toPLAN, toPOSITION, toPOST_EVENT, toPRECISION,
-    toPRIMARY, toPRIVILEGES, toPROCEDURE, toPROTECTED, toRAW_PARTITIONS,
-    toRDBDBKEY, toREAD, toREAL, toRECORD_VERSION, toRECREATE, toREFERENCES,
-    toRELEASE, toRESERVING, toRESTRICT, toRETAIN, toRETURNING_VALUES,
-    toRETURNS, toREVOKE, toRIGHT, toROLE, toROLLBACK, toROW_COUNT, toSAVEPOINT,
-    toSECOND, toSEGMENT, toSELECT, toSET, toSHADOW, toSHARED,
-    toSINGULAR, toSIZE, toSKIP, toSMALLINT, toSNAPSHOT, toSOME, toSORT, toSQL,
-    toSQLCODE, toSTABILITY, toSTARTING, toSTATEMENT, toSTATISTICS,
-    toSUB_TYPE, toSUBSTRING, toSUM, toSUSPEND, toTABLE, toTHEN, toTIME,
-    toTIMESTAMP, toTO, toTRANSACTION, toTRIGGER, toTYPE, toUNCOMMITTED, toUNION,
-    toUNIQUE, toUPDATE, toUPDATING, toUPPER, toUSER, toUSING, toVALUE, toVALUES,
-    toVARCHAR, toVARIABLE, toVARYING, toVIEW, toWAIT, toWEEKDAY, toWHEN,
-    toWHERE, toWHILE, toWITH, toWORK, toWRITE, toYEAR, toYEARDAY,
-    toBIT_LENGTH, toBLOCK, toBOTH, toCHAR_LENGTH, toCHARACTER_LENGTH, toCLOSE,
-    toCOLLATION, toCOMMENT, toCROSS, toFETCH, toIIF, toLEADING, toLOWER, toNEXT,
-    toOCTET_LENGTH, toOPEN, toRESERV, toRESTART, toRETURNING, toROWS, toSCALAR_ARRAY,
-    toSCHEMA, toSEQUENCE, toSTARTS, toTRAILING, toTRIM, toEOF);
+    // H
+    toHAVING, toHOUR,
+    // I
+    toIF, toIIF, toIN, toINACTIVE, toINDEX, toINNER, toINPUT_TYPE, toINSERT, toINSERTING,
+    toINT, toINTEGER, toINTO, toIS, toISOLATION,
+    // J
+    toJOIN,
+    // K
+    toKEY,
+    // L
+    toLAST, toLEADING, toLEAVE, toLEFT, toLENGTH, toLEVEL, toLIKE, toLOCK, toLOG_BUFFER_SIZE,
+    toLOGFILE, toLONG, toLOWER,
+    // M
+    toMANUAL, toMAX, toMAXIMUM_SEGMENT, toMERGE, toMESSAGE, toMIN, toMINUTE, toMODULE_NAME,
+    toMONTH,
+    // N
+    toNAMES, toNATIONAL, toNATURAL, toNCHAR, toNEXT, toNO, toNOT, toNULL, toNULLIF,
+    toNULLS, toNUM_LOG_BUFFERS, toNUMERIC,
+    // O
+    toOCTET_LENGTH, toOF, toOFF, toON, toONLY, toOPEN, toOPTION, toOR, toORDER, toOUTER,
+    toOUTPUT_TYPE, toOVERFLOW,
+    // P
+    toPACKAGE, toPAGE, toPAGE_SIZE, toPAGES, toPARAMETER, toPASSWORD, toPLAN, toPOSITION,
+    toPOST_EVENT, toPRECISION, toPRIMARY, toPRIVILEGES, toPROCEDURE, toPROTECTED,
+    // R
+    toRAW_PARTITIONS, toRDBDBKEY, toREAD, toREAL, toRECORD_VERSION, toRECREATE, toREFERENCES,
+    toRELEASE, toRESERV, toRESERVING, toRESTART, toRESTRICT, toRETAIN, toRETURNING,
+    toRETURNING_VALUES, toRETURNS, toREVOKE, toRIGHT, toROLE, toROLLBACK, toROW_COUNT,
+    toROWS,
+    // S
+    toSAVEPOINT, toSCALAR_ARRAY, toSCHEMA, toSECOND, toSEGMENT, toSELECT, toSEQUENCE,
+    toSET, toSHADOW, toSHARED, toSINGULAR, toSIZE, toSKIP, toSMALLINT, toSNAPSHOT,
+    toSOME, toSORT, toSQL, toSQLCODE, toSTABILITY, toSTARTING, toSTARTS, toSTATEMENT,
+    toSTATISTICS, toSUB_TYPE, toSUBSTRING, toSUM, toSUSPEND,
+    // T
+    toTABLE, toTHEN, toTIME, toTIMESTAMP, toTO, toTRAILING, toTRANSACTION, toTRIGGER,
+    toTRIM, toTYPE,
+    // U
+    toUNCOMMITTED, toUNION, toUNIQUE, toUPDATE, toUPDATING, toUPPER, toUSER, toUSING,
+    // V
+    toVALUE, toVALUES, toVARCHAR, toVARIABLE, toVARYING, toVIEW,
+    // W
+    toWAIT, toWEEKDAY, toWHEN, toWHERE, toWHILE, toWITH, toWORK, toWRITE,
+    // Y
+    toYEAR, toYEARDAY,
+    // <EOF>
+    toEOF
+  );
 
-  TSQLStatement = (ssUnknow, ssAlterException, ssAlterTable, ssAlterTrigger,
-    ssAlterProcedure, ssAlterDatabase, ssAlterDomain, ssAlterIndex, ssAlterSequence,
-    ssAlterFunction, ssReadBlob, ssInsertBlob, ssCommit, ssDeclareFilter,
-    ssDeclareFunction, ssDelete, ssDropException, ssDropIndex, ssDropProcedure,
-    ssDropTable, ssDropTrigger, ssDropView, ssDropFilter, ssDropDomain, ssDropFunction,
-    ssDropShadow, ssDropRole, ssDropGenerator, ssDropSequence, ssGrant, ssInsertInto,
-    ssExecuteProcedure, ssExecuteBlock, ssRecreateProcedure, ssRecreateTable,
-    ssRecreateView, ssRecreateException, ssSetSqlDialect, ssSetTransaction,
-    ssSetGenerator, ssSetStatistics, ssSetNames, ssCreateException, ssCreateIndex,
-    ssCreateProcedure, ssCreateTable, ssCreateTrigger, ssCreateView, ssCreateGenerator,
-    ssCreateSequence, ssCreateDatabase, ssCreateDomain, ssCreateShadow, ssCreateRole,
-    ssReplaceProcedure, ssReplaceTrigger, ssReplaceException, ssRevoke, ssRollback,
-    ssSetSavepoint, ssReleaseSavepoint, ssUndoSavepoint, ssSelect, ssUpdate, ssDebug,
-    ssAutoDDL, ssConnect, ssCommentDatabase, ssCommentDomain, ssCommentTable,
-    ssCommentView, ssCommentProcedure, ssCommentTrigger, ssCommentFunction,
-    ssCommentFilter, ssCommentException, ssCommentGenerator, ssCommentSequence,
-    ssCommentIndex, ssCommentRole, ssCommentCharacterSet, ssCommentCollation,
-    ssCommentColumn, ssCommentParameter, ssBulkParams, ssEOF, ssSkip);
+  TSQLStatement = (
+    ssUnknow, ssEOF,
+    // Alter
+    ssAlterDatabase, ssAlterDomain, ssAlterException, ssAlterFunction, ssAlterIndex,
+    ssAlterPackage, ssAlterProcedure, ssAlterSequence, ssAlterTable, ssAlterTrigger,
+    // Comment
+    ssCommentCharacterSet, ssCommentCollation, ssCommentColumn, ssCommentDatabase,
+    ssCommentDomain, ssCommentException, ssCommentFilter, ssCommentFunction,
+    ssCommentGenerator, ssCommentIndex, ssCommentPackage, ssCommentParameter,
+    ssCommentProcedure, ssCommentRole, ssCommentSequence, ssCommentTable,
+    ssCommentTrigger, ssCommentView,
+    // Create
+    ssCreateDatabase, ssCreateDomain, ssCreateException, ssCreateGenerator, ssCreateIndex,
+    ssCreatePackage, ssCreatePackageBody, ssCreateProcedure, ssCreateRole, ssCreateSequence,
+    ssCreateShadow, ssCreateTable, ssCreateTrigger, ssCreateView,
+    // Declare
+    ssDeclareFilter, ssDeclareFunction,
+    // Drop
+    ssDropDomain, ssDropException, ssDropFilter, ssDropFunction, ssDropGenerator,
+    ssDropIndex, ssDropPackage, ssDropPackageBody, ssDropProcedure, ssDropRole,
+    ssDropSequence, ssDropShadow, ssDropTable, ssDropTrigger, ssDropView,
+    // Execute
+    ssExecuteBlock, ssExecuteProcedure,
+    // Grant / Revoke
+    ssGrant, ssRevoke,
+    // Blobs
+    ssInsertBlob, ssReadBlob,
+    // Recreate
+    ssRecreateException, ssRecreatePackage, ssRecreatePackageBody, ssRecreateProcedure,
+    ssRecreateTable, ssRecreateView,
+    ssReleaseSavepoint,
+    // Replace (create or alter)
+    ssReplaceException, ssReplacePackage, ssReplaceProcedure, ssReplaceTrigger,
+    // Set
+    ssSetGenerator, ssSetNames, ssSetSqlDialect, ssSetStatistics, ssSetTransaction,
+    // Savepoints
+    ssSetSavepoint, ssUndoSavepoint,
+    // Commit / Rollback
+    ssCommit, ssRollback,
+    // DML
+    ssDelete, ssInsertInto, ssSelect, ssUpdate,
+    // Various
+    ssAutoDDL, ssBulkParams, ssConnect, ssDebug, ssSkip
+  );
 
 type
   EUIBSQLParseError = class(Exception)
@@ -290,6 +353,7 @@ begin
         toSEQUENCE  : result := ssAlterSequence;
         toEXTERNAL  : if (Next = toFUNCTION) then
                         Result := ssAlterFunction;
+        toPACKAGE   : result := ssAlterPackage;
       end;
     toREAD:
       case Next of
@@ -322,6 +386,10 @@ begin
         toROLE      : result := ssDropRole;
         toGENERATOR : result := ssDropGenerator;
         toSEQUENCE  : result := ssDropSequence;
+        toPACKAGE   : if (Next = toBODY) then
+                        result := ssDropPackageBody
+                      else
+                        result := ssDropPackage;
       end;
     toGRANT: result := ssGrant;
     toEXECUTE:
@@ -335,6 +403,11 @@ begin
         toTABLE     : result := ssRecreateTable;
         toVIEW      : result := ssRecreateView;
         toEXCEPTION : result := ssRecreateException;
+        toPACKAGE   :
+          if (Next = toBODY) then
+            result := ssRecreatePackageBody
+          else
+            result := ssRecreatePackage;
       end;
     toCREATE:
       case Next of
@@ -401,15 +474,20 @@ begin
             end else
               Error;
           end;
-		    toDOMAIN      : result := ssCreateDomain;
-		    toSHADOW      : result := ssCreateShadow;
-		    toROLE        : result := ssCreateRole;
+        toDOMAIN      : result := ssCreateDomain;
+        toSHADOW      : result := ssCreateShadow;
+        toROLE        : result := ssCreateRole;
+        toPACKAGE     : if (Next = toBODY) then
+                          result := ssCreatePackageBody
+                        else
+                          result := ssCreatePackage;
         toOR          :
           if (Next = toALTER) then
             case Next of
               toPROCEDURE : result := ssReplaceProcedure;
               toTRIGGER   : result := ssReplaceTrigger;
               toEXCEPTION : result := ssReplaceException;
+              toPACKAGE   : result := ssReplacePackage;
             end;
       end;
     toSET:
@@ -491,6 +569,7 @@ begin
                    toCOLLATION: Result := ssCommentCollation;
                    toCOLUMN: Result := ssCommentColumn;
                    toPARAMETER: Result := ssCommentParameter;
+                   toPACKAGE: Result := ssCommentPackage;
                  end;
     toDEBUG: result := ssDebug;
     toCONNECT:
@@ -816,17 +895,21 @@ next:
                  'I': case get of
                         'T': if (get = '_') and (get = 'L') and (get = 'E') and (get = 'N') and
                                (get = 'G') and (get = 'T') and (get = 'H') and (get = ' ') then
-                               Result := toBIT_LENGTH;
+                               result := toBIT_LENGTH;
                         'G': if (get = 'I') and (get = 'N') and (get = 'T') and (get = ' ') then
                                result := toBIGINT;
                       end;
                  'L': if (get = 'O') then
                       case get of
                         'B': if (get = ' ') then result := toBLOB;
-                        'C': if (get = 'K') and (get = ' ') then Result := toBLOCK;
+                        'C': if (get = 'K') and (get = ' ') then result := toBLOCK;
                       end;
-                 'O': if (get = 'T') and (get = 'H') and (get = ' ') then
-                        result := toBOTH;
+                 'O': case get of
+                        'D': if (get = 'Y') and (get = ' ') then result := toBODY;
+                        'O': if (get = 'L') and (get = 'E') and (get = 'A') and
+                                (get = 'N') and (get = ' ') then result := toBoolean;
+                        'T': if (get = 'H') and (get = ' ') then result := toBOTH;
+                      end;
                  'R': if (get = 'E') and (get = 'A') and (get = 'K') and (get = ' ') then
                         result := toBREAK;
                  'Y': if (get = ' ') then
@@ -1292,6 +1375,9 @@ next:
                end;
           'P': case get of
                  'A': case get of
+                        'C': if (get = 'K') and (get = 'A') and (get = 'G') and
+                                (get = 'E') and (get = ' ') then
+                             result := toPACKAGE;
                         'G': if (get = 'E') then
                                case get of
                                  ' ': result := toPAGE;
