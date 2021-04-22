@@ -2468,7 +2468,7 @@ begin
   try
     FTransaction.BeginTransaction(true);
     if (FStatementType = stExecProcedure) then
-      DSQLExecute2(FTransaction.FTrHandle, FStHandle,
+      DSQLExecute2(FDbHandle, FTransaction.FTrHandle, FStHandle,
         GetSQLDialect, FParameter, FSQLResult) else
       DSQLExecute(FTransaction.FTrHandle, FStHandle,
         GetSQLDialect, FParameter);

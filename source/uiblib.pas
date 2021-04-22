@@ -968,7 +968,7 @@ type
       Statement: RawbyteString; Dialect: Word; Sqlda: TSQLResult = nil): TUIBStatementType;
     procedure DSQLExecute(var TraHandle: IscTrHandle; var StmtHandle: IscStmtHandle;
       Dialect: Word; Sqlda: TSQLDA = nil);
-    procedure DSQLExecute2(var TraHandle: IscTrHandle; var StmtHandle: IscStmtHandle;
+    procedure DSQLExecute2(var DbHandle: IscDbHandle; var TraHandle: IscTrHandle; var StmtHandle: IscStmtHandle;
       Dialect: Word; InSqlda: TSQLDA; OutSqlda: TSQLResult);
     procedure DSQLFreeStatement(var StmtHandle: IscStmtHandle; Option: Word);
     function  DSQLFetch(var DBHandle: IscDbHandle; var TransHandle: IscTrHandle;
@@ -2104,11 +2104,65 @@ const
       Dialect, GetSQLDAData(Sqlda)));
   end;
 
-  procedure TUIBLibrary.DSQLExecute2(var TraHandle: IscTrHandle; var StmtHandle: IscStmtHandle; Dialect: Word;
-    InSqlda: TSQLDA; OutSqlda: TSQLResult);
+  procedure TUIBLibrary.DSQLExecute2(var DbHandle: IScDbHandle; var TraHandle: IscTrHandle;
+    var StmtHandle: IscStmtHandle; Dialect: Word; InSqlda: TSQLDA; OutSqlda: TSQLResult);
+  var
+    Status: ISCStatus;
+    i, j: Integer;
+    destArray: pointer;
+    SliceLen: integer;
+    BlobData: PBlobData;
+    BlobHandle: IscBlobHandle;
   begin
-    CheckUIBApiCall(isc_dsql_execute2(@FStatusVector, @TraHandle, @StmtHandle, Dialect,
-      GetSQLDAData(InSqlda), GetSQLDAData(OutSqlda)));
+    Status := isc_dsql_execute2(@FStatusVector, @TraHandle, @StmtHandle, Dialect,
+      GetSQLDAData(InSqlda), GetSQLDAData(OutSqlda));
+
+    if (Status = 0) and (OutSqlda <> nil) then
+    begin
+      // get array data
+      for i := 0 to Length(OutSqlda.FArrayInfos) - 1 do
+      begin
+        j := OutSqlda.FArrayInfos[i].index;
+        if not OutSqlda.IsNull[j] then
+        begin
+          destArray := OutSqlda.FXSQLDA.sqlvar[j].SqlData;
+          inc(PtrInt(destArray), SizeOf(TISCQuad));
+          SliceLen := OutSqlda.FArrayInfos[i].size;
+          ArrayGetSlice(DBHandle, TraHandle, OutSqlda.AsQuad[j],
+            OutSqlda.FArrayInfos[i].info, destArray, SliceLen);
+        end;
+      end;
+
+      // read blobs
+      for i := 0 to Length(OutSqlda.FBlobsIndex) - 1 do
+      begin
+        BlobData := OutSqlda.GetDataQuadOffset(OutSqlda.FBlobsIndex[i]);
+        if (not OutSqlda.FCachedFetch) and (BlobData.Size > 0) then // not stored and not null (the first one is null)
+          FreeMem(BlobData.Buffer);
+
+        if OutSqlda.IsNull[OutSqlda.FBlobsIndex[i]] then
+        begin
+          BlobData.Size := 0;
+          BlobData.Buffer := nil;
+        end
+        else
+        begin
+          BlobHandle := nil;
+          BlobOpen(DbHandle, TraHandle, BlobHandle, OutSqlda.AsQuad[OutSqlda.FBlobsIndex[i]]);
+          try
+            BlobReadBuffer(BlobHandle, BlobData.Size, BlobData.Buffer); // memory allocated here !!
+            Inc(OutSqlda.FStatBlobsSize, BlobData.Size);
+          finally
+            BlobClose(BlobHandle);
+          end;
+        end;
+      end;
+
+      if OutSqlda.FCachedFetch then
+        OutSqlda.AddCurrentRecord;
+    end
+    else
+      CheckUIBApiCall(Status);
   end;
 
   procedure TUIBLibrary.DSQLFreeStatement(var StmtHandle: IscStmtHandle; Option: Word);
@@ -2148,6 +2202,7 @@ const
                     sqlda.FArrayInfos[i].info, destArray, SliceLen);
                 end;
               end;
+
               if Sqlda.FCachedFetch then
                 Sqlda.AddCurrentRecord;
             end;
@@ -2223,6 +2278,7 @@ const
                     end;
                   end;
                 end;
+
                 // add to list after the blobs are fetched
                 if Sqlda.FCachedFetch then Sqlda.AddCurrentRecord;
               end;
