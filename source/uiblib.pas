@@ -2157,9 +2157,6 @@ const
           end;
         end;
       end;
-
-      if OutSqlda.FCachedFetch then
-        OutSqlda.AddCurrentRecord;
     end
     else
       CheckUIBApiCall(Status);
