@@ -414,6 +414,11 @@ type
   {$IFDEF FB21_UP}
     property InfoDBFileSize: Integer index isc_info_db_file_size read GetInfoIntValue;
   {$ENDIF}
+  {$IFDEF FB30_UP}
+    property InfoPagesUsed: Integer index fb_info_pages_used read GetInfoIntValue;
+    property InfoPagesFree: Integer index fb_info_pages_free read GetInfoIntValue;
+    property InfoDbFileID: string index fb_info_db_file_id read GetInfoStringValue;
+  {$ENDIF}
   {$IFDEF IB7_UP}
     property InfoDbReads: Integer index isc_info_db_reads read GetInfoIntValue;
     property InfoDbWrites: Integer index isc_info_db_writes read GetInfoIntValue;
