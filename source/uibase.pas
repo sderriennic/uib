@@ -1277,6 +1277,11 @@ const
   blr_subfunc            = 208;
   blr_record_version2    = 209;
   blr_gen_id2            = 210;
+
+  blr_local_timestamp    = 214;
+  blr_local_time         = 215;
+
+  blr_marks              = 217;
 {$ENDIF}
 
 (**********************************
@@ -1472,6 +1477,9 @@ const
   fb_shutrsn_signal           = -5;
   fb_shutrsn_services         = -6;
   fb_shutrsn_exit_called      = -7;
+{$IFDEF FB30_UP}
+  fb_shutrsn_emergency        = -8;
+{$ENDIF}
 
   fb_cancel_disable           =  1;
   fb_cancel_enable            =  2;
@@ -1525,6 +1533,13 @@ const
 
   isc_dpb_addr_protocol = 1;
   isc_dpb_addr_endpoint = 2;
+{$ENDIF}
+
+{$IFDEF FB30_UP}
+  isc_dpb_addr_flags    = 3;
+
+  isc_dpb_addr_flag_conn_compressed = $01;
+  isc_dpb_addr_flag_conn_encrypted  = $02;
 {$ENDIF}
 
   (*********************************
@@ -1824,7 +1839,12 @@ const
   fb_info_pages_used = 124;
   fb_info_pages_free = 125;
 
-  fb_info_crypt_state = 126;
+  fb_info_conn_flags = 132;
+
+  fb_info_crypt_key = 133;
+  fb_info_crypt_state = 134;
+
+  fb_info_db_file_id = 145;
 
   fb_info_crypt_encrypted = $01;
   fb_info_crypt_process = $02;
@@ -1931,6 +1951,7 @@ const
   isc_info_db_impl_linux_arm64 = 84;
   isc_info_db_impl_linux_ppc64el = 85;
   isc_info_db_impl_linux_ppc64 = 86;
+  isc_info_db_impl_linux_m68k = 87;
 {$ENDIF}
 
 {$IFNDEF FB30_UP}
@@ -2317,6 +2338,9 @@ const
   isc_spb_tra_id_64 = 46;
   isc_spb_single_tra_id_64 = 47;
   isc_spb_multi_tra_id_64 = 48;
+  isc_spb_rpr_commit_trans_64 = 49;
+  isc_spb_rpr_rollback_trans_64 = 50;
+  isc_spb_rpr_recover_two_phase_64 = 51;
 {$ENDIF}
 
   isc_spb_rpr_validate_db = $01;
