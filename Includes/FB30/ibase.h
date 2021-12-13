@@ -1709,6 +1709,11 @@ ISC_STATUS ISC_EXPORT fb_database_crypt_callback(ISC_STATUS*, void*);
 #define blr_record_version2                     (unsigned char) 209
 #define blr_gen_id2                                     (unsigned char) 210 
 
+#define blr_local_timestamp         (unsigned char) 214
+#define blr_local_time              (unsigned char) 215
+
+#define blr_marks                                       (unsigned char) 217             
+
 #endif 
 
 
@@ -1813,6 +1818,10 @@ ISC_STATUS ISC_EXPORT fb_database_crypt_callback(ISC_STATUS*, void*);
 
 #define isc_dpb_addr_protocol 1
 #define isc_dpb_addr_endpoint 2
+#define isc_dpb_addr_flags 3
+
+#define isc_dpb_addr_flag_conn_compressed       0x01
+#define isc_dpb_addr_flag_conn_encrypted        0x02
 
 #define isc_dpb_pages                     1
 #define isc_dpb_records                   2
@@ -2041,6 +2050,9 @@ ISC_STATUS ISC_EXPORT fb_database_crypt_callback(ISC_STATUS*, void*);
 #define isc_spb_tra_id_64                               46
 #define isc_spb_single_tra_id_64                47
 #define isc_spb_multi_tra_id_64                 48
+#define isc_spb_rpr_commit_trans_64             49
+#define isc_spb_rpr_rollback_trans_64   50
+#define isc_spb_rpr_recover_two_phase_64        51
 
 #define isc_spb_rpr_validate_db                 0x01
 #define isc_spb_rpr_sweep_db                    0x02
@@ -2154,6 +2166,7 @@ ISC_STATUS ISC_EXPORT fb_database_crypt_callback(ISC_STATUS*, void*);
 #define fb_shutrsn_signal                                 -5
 #define fb_shutrsn_services                               -6
 #define fb_shutrsn_exit_called                    -7
+#define fb_shutrsn_emergency                      -8
 
 #define fb_cancel_disable                                 1
 #define fb_cancel_enable                                  2
@@ -2286,7 +2299,12 @@ enum db_info_types
         fb_info_pages_used = 124,
         fb_info_pages_free = 125,
 
-        fb_info_crypt_state = 126,
+    fb_info_conn_flags = 132,
+
+        fb_info_crypt_key = 133,
+        fb_info_crypt_state = 134,
+
+        fb_info_db_file_id = 145,
 
         isc_info_db_last_value   
 };
@@ -2382,6 +2400,7 @@ enum  info_db_implementations
         isc_info_db_impl_linux_arm64 = 84,
         isc_info_db_impl_linux_ppc64el = 85,
         isc_info_db_impl_linux_ppc64 = 86,
+        isc_info_db_impl_linux_m68k = 87,
 
         isc_info_db_impl_last_value   
 };
