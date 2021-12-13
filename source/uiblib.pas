@@ -1918,18 +1918,21 @@ const
     item: byte; size: Integer): AnsiString;
   begin
     SetLength(result, size);
-    while true do
+    while True do
     begin
       CheckUIBApiCall(isc_database_info(@FStatusVector, @DBHandle, 1, @item,
         Length(result), PAnsiChar(result)));
-      if result[1] = chr(isc_info_truncated) then
-        SetLength(result, Length(result) + size) else
-          if (byte(result[1]) = item) or (result[1] = #1) then
-            Break else
-            begin
-              result := '';
-              raise Exception.Create('');
-            end;
+
+      if result[1] = Chr(isc_info_truncated) then
+        SetLength(result, Length(result) + size)
+      else
+        if (byte(result[1]) = item) or (result[1] = #1) then
+          Break
+        else
+        begin
+          result := '';
+          raise Exception.Create('');
+        end;
     end;
   end;
 
@@ -1939,7 +1942,8 @@ const
   begin
     len := length(CharacterSet);
     if (len = 0) then
-      Result := csNONE else
+      Result := csNONE
+    else
     begin
       for Result := low(TCharacterSet) to High(TCharacterSet) do
         if (len = Length(CharacterSetStr[Result])) and
