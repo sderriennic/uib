@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{ED78596A-3724-4B37-9DAD-2148095B44A8}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="UIBR.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="UIBD.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="UIBR">
+        <MSBuild Projects="UIBR.dproj"/>
+    </Target>
+    <Target Name="UIBR:Clean">
+        <MSBuild Projects="UIBR.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="UIBR:Make">
+        <MSBuild Projects="UIBR.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="UIBD">
+        <MSBuild Projects="UIBD.dproj"/>
+    </Target>
+    <Target Name="UIBD:Clean">
+        <MSBuild Projects="UIBD.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="UIBD:Make">
+        <MSBuild Projects="UIBD.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="UIBR;UIBD"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="UIBR:Clean;UIBD:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="UIBR:Make;UIBD:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>
