@@ -1082,7 +1082,7 @@ type
 {$ENDIF}
 
   TSecurityAction = (saAddUser, saDeleteUser, saModifyUser, saDisplayUser, saDisplayUsers);
-  TSecurityParam = (spRole, spUser, spPass, spFirstName, spMiddleName, spLastName, spUserID, spGroupID{$IFDEF FB25_UP}, spAdmin{$ENDIF});
+  TSecurityParam = (spDbName, spRole, spUser, spPass, spFirstName, spMiddleName, spLastName, spUserID, spGroupID{$IFDEF FB25_UP}, spAdmin{$ENDIF});
   TSecurityParams = set of TSecurityParam;
 
   TUserInfo = class(TObject)
@@ -1093,12 +1093,15 @@ type
     LastName: string;
     GroupID: Integer;
     UserID: Integer;
+  {$IFDEF FB25_UP}
+    Admin: Boolean;
+  {$ENDIF}
   end;
 
   TUIBSecurity = class(TUIBService)
   private
     FIntegerParams: array[ord(spUserID)..ord(high(TSecurityParam))] of Integer;
-    FStringParams: array[ord(spRole)..ord(spLastName)] of string;
+    FStringParams: array[ord(spDbName)..ord(spLastName)] of string;
     FModifiedParams: TSecurityParams;
     FUserInfos: TObjectList;
     procedure ClearParams;
@@ -1133,6 +1136,8 @@ type
     { number of user(s) retrieved by DisplayUser(s) }
     property UserInfoCount: Integer read GetUserInfoCount;
   published
+    { Specify Database to use }
+    property DbName: string index ord(spDbName) read GetStringParam write SetStringParam;
     { SQL role name to use when connecting to the security database }
     property Role: string index ord(spRole) read GetStringParam write SetStringParam;
     { The username to add, modify or remove from the security database (max 31 chars) }
@@ -4017,9 +4022,14 @@ procedure TUIBSecurity.RunAction(aAction: TSecurityAction);
 const
   IscActions : array[TSecurityAction] of AnsiChar = (
     isc_action_svc_add_user, isc_action_svc_delete_user, isc_action_svc_modify_user,
-    isc_action_svc_display_user, isc_action_svc_display_user);
+{$IFDEF FB25_UP}
+    isc_action_svc_display_user_adm, isc_action_svc_display_user_adm { Display all users }
+{$ELSE}
+    isc_action_svc_display_user, isc_action_svc_display_user { Display all users }
+{$ENDIF}
+  );
   IscParams : array[TSecurityParam] of AnsiChar = (
-    isc_spb_sql_role_name, isc_spb_sec_username, isc_spb_sec_password,
+    isc_spb_dbname, isc_spb_sql_role_name, isc_spb_sec_username, isc_spb_sec_password,
     isc_spb_sec_firstname, isc_spb_sec_middlename, isc_spb_sec_lastname,
     isc_spb_sec_userid, isc_spb_sec_groupid {$IFDEF FB25_UP},isc_spb_sec_admin{$ENDIF});
 var
@@ -4077,6 +4087,14 @@ var
 begin
   StartParams := IscActions[aAction];
 
+{$IFDEF FB30_UP}
+  if (FExpectedDb <> '') and (GetStringParam(Ord(spDbName)) = '') then
+    SetStringParam(Ord(spDbName), FExpectedDb);
+{$ENDIF}
+
+  if spDbName in FModifiedParams then
+    AddStringParam(spDbName);
+
   if spRole in FModifiedParams then
     AddStringParam(spRole);
 
@@ -4122,6 +4140,9 @@ begin
           LastName := ParseString(spLastName);
           UserID := ParseInteger(spUserID);
           GroupID := ParseInteger(spGroupID);
+        {$IFDEF FB25_UP}
+          Admin := ParseInteger(spAdmin) <> 0;
+        {$ENDIF}
           FUserInfos.Add(U);
         except
           U.Free;
