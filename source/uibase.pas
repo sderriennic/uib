@@ -42,6 +42,7 @@ uses
 
 (* Basic data types *)
 type
+  FB_API_HANDLE = {$IFDEF TYPE_IDENTITY} type {$ENDIF} Pointer;
 
 {$ifndef FPC}
   {$IFDEF CPUX64}
@@ -261,7 +262,7 @@ type
   ISC_INT64 = {$IFDEF TYPE_IDENTITY} type {$ENDIF} Int64;
   ISCInt64 = ISC_INT64;
 
-  ISC_UINT64 = {$IFDEF TYPE_IDENTITY} type {$ENDIF} Int64;
+  ISC_UINT64 = {$IFDEF TYPE_IDENTITY} type {$ENDIF} UInt64;
   ISCUInt64 = ISC_UINT64;
 
   {$DEFINE ISC_INT64_DEFINED}
@@ -274,7 +275,7 @@ type
   {$UNDEF ISC_INT64_DEFINED}
   {$ELSE}
   ISC_INT64 = {$IFDEF TYPE_IDENTITY} type {$ENDIF} Int64;
-  ISC_UINT64 = {$IFDEF TYPE_IDENTITY} type {$ENDIF} Int64;
+  ISC_UINT64 = {$IFDEF TYPE_IDENTITY} type {$ENDIF} UInt64;
   {$ENDIF ISC_INT64_DEFINED}
 
 (*******************************************************************
@@ -680,15 +681,15 @@ const
  * InterBase Handle Definitions *
  ********************************)
 type
-  isc_att_handle = PPointer;
+  isc_att_handle = FB_API_HANDLE;
   IscAttHandle = {$IFDEF TYPE_IDENTITY} type {$ENDIF} isc_att_handle;
   PIscAttHandle = ^IscAttHandle;
 
-  isc_blob_handle = PPointer;
+  isc_blob_handle = FB_API_HANDLE;
   IscBlobHandle = {$IFDEF TYPE_IDENTITY} type {$ENDIF} isc_blob_handle;
   PIscBlobHandle = ^IscBlobHandle;
 
-  isc_db_handle = PPointer;
+  isc_db_handle = FB_API_HANDLE;
   IscDbHandle = {$IFDEF TYPE_IDENTITY} type {$ENDIF} isc_db_handle;
   PIscDbHandle = ^IscDbHandle;
 
@@ -696,19 +697,19 @@ type
   IscFormHandle = {$IFDEF TYPE_IDENTITY} type {$ENDIF} isc_form_handle;
   PIscFormHandle = ^IscFormHandle;
 
-  isc_req_handle = PPointer;
+  isc_req_handle = FB_API_HANDLE;
   IscReqHandle = {$IFDEF TYPE_IDENTITY} type {$ENDIF} isc_req_handle;
   PIscReqHandle = ^IscReqHandle;
 
-  isc_stmt_handle = PPointer;
+  isc_stmt_handle = FB_API_HANDLE;
   IscStmtHandle = {$IFDEF TYPE_IDENTITY} type {$ENDIF} isc_stmt_handle;
   PIscStmtHandle = ^IscStmtHandle;
 
-  isc_svc_handle = PPointer;
+  isc_svc_handle = FB_API_HANDLE;
   IscSvcHandle = {$IFDEF TYPE_IDENTITY} type {$ENDIF} isc_svc_handle;
   PIscSvcHandle = ^IscSvcHandle;
 
-  isc_tr_handle = PPointer;
+  isc_tr_handle = FB_API_HANDLE;
   IscTrHandle = {$IFDEF TYPE_IDENTITY} type {$ENDIF} isc_tr_handle;
   PIscTrHandle = ^IscTrHandle;
 

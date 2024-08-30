@@ -42,7 +42,7 @@ requires
   vclx,
   dclstd,
   vcldb,
-  UIBD26Win32R;
+  UIBR;
 
 contains
   uibreg in '..\source\uibreg.pas',

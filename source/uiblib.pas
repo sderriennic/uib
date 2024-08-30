@@ -4095,7 +4095,6 @@ type
     r: TRttiType;
     f: TRttiField;
     o: TObject;
-    str: string;
   begin
     p := TypeInfo(T);
     if p <> nil then
