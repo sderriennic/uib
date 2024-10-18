@@ -21,6 +21,10 @@ unit uib;
 
 {$I uib.inc}
 
+{$IFDEF TYPEDADDRESS_ON}
+  {$T-}
+{$ENDIF}
+
 (*------------------------------------------------------------------------------
   This is a cascading programming style.
 
