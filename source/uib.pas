@@ -1020,7 +1020,8 @@ type
 
   TBackupOption = (boIgnoreChecksums, boIgnoreLimbo, boMetadataOnly,
     boNoGarbageCollection, boOldMetadataDesc, boNonTransportable,
-    boConvertExtTables, boExpand);
+    boConvertExtTables, boExpand
+    {$IFDEF FB25_UP}, boNoTriggers{$ENDIF});
   TBackupOptions = set of TBackupOption;
 
   TUIBBackup = class(TUIBBackupRestore)
@@ -1034,7 +1035,8 @@ type
   TRestoreOption = (roDeactivateIndexes, roNoShadow, roNoValidityCheck,
     roOneRelationAtATime, roReplace, roCreateNewDB, roUseAllSpace
     {$IFDEF IB71_UP}, roValidate{$ENDIF}
-    {$IFDEF FB25_UP}, roFixMetadataCharset, roFixDataCharset{$ENDIF});
+    {$IFDEF FB25_UP}, roFixMetadataCharset, roFixDataCharset{$ENDIF}
+    {$IFDEF FB30_UP}, roMetadataOnly{$ENDIF});
 
   TRestoreOptions = set of TRestoreOption;
 
@@ -3604,8 +3606,8 @@ var
 
   procedure AddString(id: AnsiChar; const Value: AnsiString);
   begin
-    if (Value <> '') then
-      SPB := SPB + id + AnsiChar(length(Value)) + Value;
+    if Value <> '' then
+      SPB := SPB + id + AnsiChar(Length(Value)) + Value;
   end;
 
 begin
@@ -3738,6 +3740,11 @@ var
   i: Integer;
   FileName: AnsiString;
   FileLength: Integer;
+  AOptions: TBackupOptions;
+  Opts: Cardinal;
+{$IFDEF FB25_UP}
+  NoTriggers: Boolean;
+{$ENDIF}
 
   function GetValue(Index: Integer): string;
   begin
@@ -3782,8 +3789,30 @@ begin
   if FVerbose then
     Result := Result + isc_spb_verbose;
 
-  if (FOptions <> []) then
-    Result := Result + isc_spb_options + PAnsiChar(@FOptions)^ + #0#0#0;
+{$IFDEF FB25_UP}
+  NoTriggers := False;
+  if boNoTriggers in FOptions then
+  begin
+    NoTriggers := True;
+    AOptions := FOptions - [boNoTriggers];
+  end
+  else
+{$ELSE}
+    AOptions := FOptions;
+{$ENDIF}
+
+  Opts := 0;
+  if AOptions <> [] then
+    Opts := PByte(@AOptions)^;
+
+{$IFDEF FB25_UP}
+  if NoTriggers then
+    Opts := Opts + isc_spb_bkp_no_triggers;
+{$ENDIF}
+
+  if Opts <> 0 then
+    Result := Result + isc_spb_options + PAnsiChar(@Opts)[0] +
+      PAnsiChar(@Opts)[1] + PAnsiChar(@Opts)[2] + PAnsiChar(@Opts)[3];
 end;
 
 { TUIBRestore }
@@ -3808,6 +3837,9 @@ var
   Opts: Cardinal;
 {$IFDEF FB25_UP}
   FixMeta, FixData: Boolean;
+{$ENDIF}
+{$IFDEF FB30_UP}
+  MetaOnly: Boolean;
 {$ENDIF}
 begin
   // backup service   ibservices
@@ -3843,12 +3875,29 @@ begin
   AOptions := FOptions;
 {$ENDIF}
 
-  if (AOptions <> []) then
+{$IFDEF FB30_UP}
+  // Extract roMetaDataOnly because 0x0004 is not in the range of other options 0x0100 -> 0x40000
+  MetaOnly := False;
+  if roMetadataOnly in AOptions then
   begin
+    MetaOnly := True;
+    AOptions := AOptions - [roMetaDataOnly];
+  end;
+{$ENDIF}
+
+  Opts := 0;
+  if AOptions <> [] then
+    // Shift everything one nibble left so options start at 0x0100
     Opts := PByte(@AOptions)^ shl 8;
+
+{$IFDEF FB30_UP}
+  if MetaOnly then
+    Opts := Opts + isc_spb_res_metadata_only; // 0x0004
+{$ENDIF}
+
+  if Opts <> 0 then
     Result := Result + isc_spb_options + PAnsiChar(@Opts)[0] +
       PAnsiChar(@Opts)[1] + PAnsiChar(@Opts)[2] + PAnsiChar(@Opts)[3];
-  end;
 
   if FPageSize > 0 then
     Result := Result + isc_spb_res_page_size + PAnsiChar(@FPageSize)[0] +
